@@ -1,0 +1,81 @@
+\section{Lecture - 1}
+
+
+The objective is to minimize the regret function in the net timestpes $T$
+
+\begin{equation}
+    \label{Regret}
+    R_T  = \sum_T l(y_t, a_t)  - \min_{a \in A} \sum_T l(y_t, a)
+\end{equation}
+
+The loss in \ref{Regret} is like loss in hindisght.
+The sum term that is $\sum_T l(y_t, a_t)$ is a good cumulative loss but it is hard to compare two algorithms, 
+The adversary can simply always beat you everywhere. However he cannot do this with the Regret loss function, because his choice
+of actions even though that maximizes the first may actually start to maximize the second term also.
+
+\begin{algorithm}
+    \caption{OF Framework}
+    \begin{algorithmic}[1]
+        \For{$t = 1 \to T$}
+            % \State $a_t \gets \argmin_{a \in A} \sum_{i=1}^{t-1} l(y_i, a)$
+            \State Algorithm $A$ chooses $a_t \in A$
+            \State $y_t \gets f(a_t)$
+            \State $l_t \gets l(y_t, a_t) \ \ l \in \mathcal{L}$ \Comment{I must do well on every single $l$}
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
+
+The interpretation is that the environment is not being modelled, it is completely adversarial in its nature
+and the objective is to minimize the regret
+
+\textcolor{red}{It is unclear why the actions dont change in the RHT of the regret function.}
+Applications may include weather filetring, spam filtering and stoick prediction.
+In spam filtering the objective function
+
+In stock prediction, the reward can be considered to be some $r_t$ (decided by the adversary) and the weight vector is that of the distribution of money in the stocks
+The loss will be negative of the sum of inner products.
+
+\begin{equation}
+    \label{stock}
+    l = - \sum_t \langle p_t ,r_t \rangle
+\end{equation}
+
+
+
+\begin{algorithm}[H]
+    \caption{Learning with Expert advice}
+    \begin{algorithmic}[1]
+        \Require $N$ experts
+        \For{$t = 1 \to T$}
+            % \State $a_t \gets \argmin_{a \in A} \sum_{i=1}^{t-1} l(y_i, a)$
+            \State Create expert predictions $D$
+            \State Algorithm $A$ chooses $p_t \in D$
+            \State Adversary chooses $y_t$ and $l_t$
+            \State $l_t \gets l(y_t, a_t) \ \ l \in \mathcal{L}$ \Comment{I must do well on every single $l$}
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
+Say that the problem is Binary outputm i.e the $p_t$ and $y_t$ are both binary output (space $\mathcal{Y} = {0,1}$)
+There is exactly
+
+\begin{algorithm}[H]
+    \caption{Majority voting}
+    \begin{algorithmic}[1]
+        \Require $N$ experts
+        \For{$t = 1 \to T$}
+            % \State $a_t \gets \argmin_{a \in A} \sum_{i=1}^{t-1} l(y_i, a)$
+            \State Create expert predictions $D$
+            \State Algorithm $A$ chooses The Majority $p_t \in D$
+            \State Adversary chooses $y_t$ and $l_t$
+            \If{$l_t(p_t, y_t) = 1$ }
+                \State Throw out the majority
+            \Else
+                \State Keep the majority, no loss incurred
+            \EndIf
+
+
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
