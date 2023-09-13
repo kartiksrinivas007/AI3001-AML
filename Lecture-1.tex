@@ -1,35 +1,48 @@
+
+\textbf{Important Remarks}
+
+\begin{itemize}
+    \item The Notes often use \textcolor{red}{\textit{Einstein Notation}}
+    with the iterating variable usually denoted as $i$
+\end{itemize}
+
+
+\vspace*{10pt}
+\hrule
+\vspace{10pt}
+
 \section{Lecture - 1}
 
 
-The objective is to minimize the regret function in the net timestpes $T$
+% The objective is to minimize the regret function in the net timestpes $T$
 
-\begin{equation}
-    \label{Regret}
-    R_T  = \sum_T l(y_t, a_t)  - \min_{a \in A} \sum_T l(y_t, a)
-\end{equation}
+% % \begin{equation}
+% %     \label{Regret}
+% %     R_T  = \sum_T l(y_t, a_t)  - \min_{a \in A} \sum_T l(y_t, a)
+% % \end{equation}
 
-The loss in \ref{Regret} is like loss in hindisght.
-The sum term that is $\sum_T l(y_t, a_t)$ is a good cumulative loss but it is hard to compare two algorithms, 
-The adversary can simply always beat you everywhere. However he cannot do this with the Regret loss function, because his choice
-of actions even though that maximizes the first may actually start to maximize the second term also.
+% The loss in \ref{Regret} is like loss in hindisght.
+% The sum term that is $\sum_T l(y_t, a_t)$ is a good cumulative loss but it is hard to compare two algorithms, 
+% The adversary can simply always beat you everywhere. However he cannot do this with the Regret loss function, because his choice
+% of actions even though that maximizes the first may actually start to maximize the second term also.
 
 \begin{algorithm}
     \caption{OF Framework}
     \begin{algorithmic}[1]
         \For{$t = 1 \to T$}
             % \State $a_t \gets \argmin_{a \in A} \sum_{i=1}^{t-1} l(y_i, a)$
-            \State Algorithm $A$ chooses $a_t \in A$
-            \State $y_t \gets f(a_t)$
+            \State Algorithm $A$ chooses $p_t \in D_t$
+            \State $y_t \gets f(p_t)$
             \State $l_t \gets l(y_t, a_t) \ \ l \in \mathcal{L}$ \Comment{I must do well on every single $l$}
         \EndFor
     \end{algorithmic}
 \end{algorithm}
 
 
-The interpretation is that the environment is not being modelled, it is completely adversarial in its nature
-and the objective is to minimize the regret
+% The interpretation is that the environment is not being modelled, it is completely adversarial in its nature
+% and the objective is to minimize the regret
 
-\textcolor{red}{It is unclear why the actions dont change in the RHT of the regret function.}
+% \textcolor{red}{It is unclear why the actions dont change in the RHT of the regret function.}
 Applications may include weather filetring, spam filtering and stoick prediction.
 In spam filtering the objective function
 
@@ -43,22 +56,37 @@ The loss will be negative of the sum of inner products.
 
 
 
+
 \begin{algorithm}[H]
     \caption{Learning with Expert advice}
     \begin{algorithmic}[1]
         \Require $N$ experts
         \For{$t = 1 \to T$}
             % \State $a_t \gets \argmin_{a \in A} \sum_{i=1}^{t-1} l(y_i, a)$
-            \State Create expert predictions $D$
-            \State Algorithm $A$ chooses $p_t \in D$
+            \State Create expert predictions $D_t = \{f_{i,t}\}_{i = 1}^{i = n}$
+            \State Algorithm $A$ chooses $p_t \in D_t$
             \State Adversary chooses $y_t$ and $l_t$
             \State $l_t \gets l(y_t, a_t) \ \ l \in \mathcal{L}$ \Comment{I must do well on every single $l$}
         \EndFor
     \end{algorithmic}
 \end{algorithm}
 
-Say that the problem is Binary outputm i.e the $p_t$ and $y_t$ are both binary output (space $\mathcal{Y} = {0,1}$)
-There is exactly
+\section*{Regret}
+The correct expression for regret of an algorithmic $\mca$ that takes in the prediction history $p_{1:t-1}$ and outputs a \textbf{specific} $p_t \in D_t$ is given by
+
+\begin{equation}
+    \label{Regret}
+    R_T(\mca)  = \underset{l_i, y_i \in \mathcal{L,Y}}{\sup} \{\sum_T l_t(y_t, p_t = \mca(p_1, p_2, \ldots p_{t-1}))  - \min_{p^*_t \in D_t} \sum_T l_t(y_t, p^*_t) \}
+\end{equation}
+
+Say that the problem is Binary output i.e the $p_t$ and $y_t$ are both binary output (space $\mathcal{Y} = {0,1}$)
+However note that this has nothing to do with the $D_t$, which is a set whose every term belongs to the output space $\mathcal{Y}$.
+The loss function is also fixed at 0,1 loss, the only thing the adversary can pick now is the output $y_t$.
+Let us also assume that there is a \textbf{perfect} expert. Which means the RHT in regret is now zero.
+
+
+This implies that the algorithm $\mca$ should ideally mimic the perfect expert's predictions as much as possible in-order to make the regret value become 0.
+The question, then is to devise an algorithm from the history that can find the perfect expert \textbf{as quick as possible}, by cutting down other options in $D_t$.
 
 \begin{algorithm}[H]
     \caption{Majority voting}
@@ -78,4 +106,109 @@ There is exactly
 
         \EndFor
     \end{algorithmic}
+    
 \end{algorithm}
+The number of experts that are thrown out every mistake are atleast half the total number of experts (because the majority is thrown)
+But this is an idealization. In reality, there will be no `best expert'. Instead we need to find the 'okay-ish' expert.
+
+\subsection*{Potential Function}
+
+
+\begin{algorithm}[H]
+    \caption{Weighted Majority Algorithm}
+        \begin{algorithmic}
+                \State $w_1 \gets 1$
+                \For{$t = 1 \to T$}
+                    \State $p_t \gets  1 \{ \sum_i  1_{f_{t, i} = 1} w_{t,i} \ge \sum_i 1_{f_{t, i = 0} w_{t, i}} \}$
+                    \State Adversary chooses $y_t$ and $l_t$
+                    \If{$l_t(f_{i, t}, y_t) = 0$ }
+                        \State $w_{t+1,i} \gets w_{t,i}$
+                    \Else
+                        \State $w_{t+1,i} \gets \beta w_{t,i}$ \Comment{$\beta \le 1$}
+                    \EndIf
+                    \State Normalize $w_{t+1}$
+                \EndFor
+        \end{algorithmic}
+\end{algorithm}
+
+Essentially the weights of the mistake-makers are reduced and the weights of the correct ones remain constant
+The bound you can prove using induction is as follows 
+
+\textcolor{red}{Provided the step $t$ is a mistake, then the following holds}
+\\
+\textcolor{red}{Motivation for usage of $\Phi_t$ is unclear}
+\begin{equation}
+    \label{Potential}
+        \Phi_t = \sum_{i=1}^N w_{t,i} \ \ \ \ \Phi_{t + 1} \le \frac{1 + \beta}{2} \Phi_t
+\end{equation}
+
+WLOG, assume that $y_t = 0$ and $p_t = 1$ (works for mistake cases)
+\begin{align}
+        \Phi_{t + 1}  &= 1_{f_{i, t} = 1} w_{i, t+1} + 1_{f_{i,t} = 0} w_{i, t+1}
+        \\
+        &= 1_{f_{i, t} = 1} \beta w_{i, t} + 1_{f_{i,t} = 0} w_{i, t}
+        \\
+        &= 1_{f_{i, t} = 1} \beta  w_{i, t} + \beta 1_{f_{i,t} = 0} w_{i, t} + (1 - \beta)1_{f_{i, t} = 0}  w_{i, t}
+        \\
+        &\le  \beta \Phi_t + (1 - \beta)1_{f_{i, t} = 0}  \Phi_t/2
+        \\
+        &\le \frac{1 + \beta}{2} \Phi_t
+\end{align}
+
+For a more rigorous proof with general $y_t$:-
+
+\begin{align}
+    \Phi_{t + 1}  &= 1_{f_{i, t} \neq y_t} w_{i, t+1} + 1_{f_{i,t} = y_t} w_{i, t+1}
+    \\
+    &= 1_{f_{i, t} \neq y_t} \beta w_{i, t} + 1_{f_{i,t} = y_t} w_{i, t}
+    \\
+    &= \beta \Phi_t + (1 - \beta)1_{f_{i, t} = y_t}  w_{i, t}
+    \\
+    & \le \beta \Phi_t + (1 - \beta)\phi_t/2 \ \ \le \frac{1 + \beta }{2} \Phi_t
+\end{align}
+
+Let the number of mistakes of the $i$'th expert  be called $M_{i, t}$. Let the number of mistakes for the generic algorithm be called $M_T$.
+We need to find a bound on the regret
+
+
+Let $$i^* = \text{argmin} \ \ M_{i, t}$$. 
+
+
+The appropriate format for regret = $M_{T} - M_{i^*, T}$. Which was the expert that I should have listened to (essentially).
+
+You can note that $M_T$ is a generic algorithm, that does not listen to any of the experts. Essentially it tries to solve the problem with any possible adversary and gives a 'worst' case bound
+
+\textit{It is possible that our strategy for choosing $p_t$ can also be purely randomized}, in this case the regret should relate to the average number of errors made by the algorithm, as 
+compared to the \textbf{best average expert}.
+
+
+\begin{algorithm}[H]
+    \caption{Randomized Weighted Majority Algorithm}
+        \begin{algorithmic}
+                \State $w_1 \gets 1$
+                \For{$t = 1 \to T$}
+                \Statex
+                    \State $p_t  = \text{Ber}(\frac{1_{f_{i, t} \neq y_t} w_{i, t-1}}{w_{t-1, i}})$ \Comment{The probability of choosing any class $y$ as given by the previous step}
+                    \Statex
+                    \State Adversary chooses $y_t$ and $l_t$
+                    \If{$l_t(f_{i, t}, y_t) = 0$ }
+                        \State $w_{t+1,i} \gets w_{t,i}$
+                    \Else
+                        \State $w_{t+1,i} \gets \beta w_{t,i}$ \Comment{$\beta \le 1$}
+                    \EndIf
+                    \State Normalize $w_{t+1}$
+                \EndFor
+        \end{algorithmic}
+\end{algorithm}
+
+\begin{equation}
+    \label{Randomized}
+    \mathbb{E}[\Phi_{t+1}] \le (1 - (1 - \beta)b_t) \mathbb{E}[\Phi_t]
+\end{equation}
+
+
+The term 
+$\sum b_t$ is roughly like  the number of "mistakes" made by the algorithm, somewhat like the average weight that
+is being put into the wrong class. In the case where there was no randomization, atleast half the weight was put into the wrong class whenever there was a mistake.
+
+
